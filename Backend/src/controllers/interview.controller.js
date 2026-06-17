@@ -1,79 +1,3 @@
-// const pdfParse = require("pdf-parse");
-// const generateInterviewReport = require("../services/ai.service");
-// const interviewReportModel = require("../models/interviewReport.model");
-
-// async function generateInterviewReportController(req, res) {
-//   const resumeContent = await new pdfParse.PDFParse(
-//     Uint8Array.from(req.file.buffer),
-//   ).getText();
-//   const { selfDescription, jobDescription } = req.body;
-
-//   const interviewReportByAi = await generateInterviewReport({
-//     resume: resumeContent.text,
-//     selfDescription,
-//     jobDescription,
-//   });
-
-//  console.log("============== AI RAW ==============")
-
-// console.dir(interviewReportByAi,{
-//     depth:null
-// })
-
-// console.log("MATCH =>", interviewReportByAi.matchScore)
-
-// console.log("TECH =>", interviewReportByAi.technicalQuestions)
-
-// console.log("====================================")
-  
-
-//   // const interviewReport = await interviewReportModel.create({
-//   //   user: req.user.id,
-//   //   resume: resumeContent.text,
-//   //   selfDescription,
-//   //   jobDescription,
-//   //   ...interviewReportByAi,
-//   // });
-
-//   console.log({
-//     user : req.user.id,
-//     resume : resumeContent.text,
-//     selfDescription,
-//     jobDescription,
-//     ...interviewReportByAi
-// })
-
-
-// const interviewReport = await interviewReportModel.create({
-
-//     user : req.user.id,
-
-//     resume : resumeContent.text,
-
-//     selfDescription,
-
-//     jobDescription,
-
-//     matchScore : interviewReportByAi.matchScore,
-
-//     technicalQuestions : interviewReportByAi.technicalQuestions,
-
-//     behavioralQuestions : interviewReportByAi.behavioralQuestions,
-
-//     skillGaps : interviewReportByAi.skillGaps,
-
-//     preparationPlan : interviewReportByAi.preparationPlan
-
-// })
-
-//   res.status(201).json({
-//     message: "Interview report generated succesfully",
-//     interviewReport,
-//   });
-// }
-
-// module.exports = { generateInterviewReportController };
-
 const pdfParse = require("pdf-parse")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interviewReport.model")
@@ -84,10 +8,58 @@ const interviewReportModel = require("../models/interviewReport.model")
 /**
  * @description Controller to generate interview report based on user self description, resume and job description.
  */
+// async function generateInterViewReportController(req, res) {
+
+//     // const resumeContent = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
+//     const { selfDescription, jobDescription } = req.body
+
+// let resumeContent = {
+//     text: ""
+// }
+
+// if (req.file) {
+//     resumeContent = await (
+//         new pdfParse.PDFParse(
+//             Uint8Array.from(req.file.buffer)
+//         )
+//     ).getText()
+// }
+
+//     const interViewReportByAi = await generateInterviewReport({
+//         resume: resumeContent.text,
+//         selfDescription,
+//         jobDescription
+//     })
+
+//     const interviewReport = await interviewReportModel.create({
+//         user: req.user.id,
+//         resume: resumeContent.text,
+//         selfDescription,
+//         jobDescription,
+//         ...interViewReportByAi
+//     })
+
+//     res.status(201).json({
+//         message: "Interview report generated successfully.",
+//         interviewReport
+//     })
+
+// }
 async function generateInterViewReportController(req, res) {
 
-    const resumeContent = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
     const { selfDescription, jobDescription } = req.body
+
+    let resumeContent = {
+        text: ""
+    }
+
+    if (req.file) {
+        resumeContent = await (
+            new pdfParse.PDFParse(
+                Uint8Array.from(req.file.buffer)
+            )
+        ).getText()
+    }
 
     const interViewReportByAi = await generateInterviewReport({
         resume: resumeContent.text,
@@ -95,14 +67,21 @@ async function generateInterViewReportController(req, res) {
         jobDescription
     })
 
+    // const interviewReport = await interviewReportModel.create({
+    //     user: req.user.id,
+    //     resume: resumeContent.text,
+    //     selfDescription,
+    //     jobDescription,
+    //     ...interViewReportByAi
+    // })
     const interviewReport = await interviewReportModel.create({
-      title: jobDescription.split("\n")[0],
-        user: req.user.id,
-        resume: resumeContent.text,
-        selfDescription,
-        jobDescription,
-        ...interViewReportByAi
-    })
+    user: req.user.id,
+    resume: resumeContent.text,
+    selfDescription,
+    jobDescription,
+    title: interViewReportByAi.title || "Software Developer",
+    ...interViewReportByAi
+})
 
     res.status(201).json({
         message: "Interview report generated successfully.",
