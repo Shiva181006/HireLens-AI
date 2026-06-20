@@ -20,6 +20,12 @@ const interviewRouter = require("./routes/interview.routes")
 app.use("/api/auth", authRouter)
 app.use("/api/interview", interviewRouter)
 
+app.use((err,req,res,next)=>{
 
+    res.status(500).json({
+        message:err.message
+    })
+
+})
 
 module.exports = app
