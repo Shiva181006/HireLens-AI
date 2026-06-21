@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
 import "../style/home.scss";
 import { useInterview } from "../hooks/useInterview.js";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { useState, useRef } from "react";
 
 const Home = () => {
   const { loading, generateReport, reports } = useInterview();
@@ -11,6 +12,13 @@ const Home = () => {
   const resumeInputRef = useRef();
 
   const navigate = useNavigate();
+
+  const { handleLogout } = useAuth();
+
+  const logoutUser = async () => {
+    await handleLogout();
+    navigate("/login");
+  };
 
   const handleGenerateReport = async () => {
     const resumeFile = resumeInputRef.current.files[0];
@@ -39,6 +47,10 @@ const Home = () => {
     <div className="home-page">
       {/* Page Header */}
       <header className="page-header">
+        <button className="logout-btn" onClick={logoutUser}>
+          Logout
+        </button>
+
         <h1>
           Create Your Custom <span className="highlight">Interview Plan</span>
         </h1>
