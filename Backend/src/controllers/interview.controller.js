@@ -8,103 +8,105 @@ const interviewReportModel = require("../models/interviewReport.model");
 /**
  * @description Controller to generate interview report based on user self description, resume and job description.
  */
+
 // async function generateInterViewReportController(req, res) {
+//   const { selfDescription, jobDescription } = req.body;
 
-//     // const resumeContent = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
-//     const { selfDescription, jobDescription } = req.body
+//   let resumeContent = {
+//     text: "",
+//   };
 
-// let resumeContent = {
-//     text: ""
-// }
+//   if (req.file) {
+//     resumeContent = await new pdfParse.PDFParse(
+//       Uint8Array.from(req.file.buffer),
+//     ).getText();
+//   }
 
-// if (req.file) {
-//     resumeContent = await (
-//         new pdfParse.PDFParse(
-//             Uint8Array.from(req.file.buffer)
-//         )
-//     ).getText()
-// }
+//   const interViewReportByAi = await generateInterviewReport({
+//     resume: resumeContent.text,
+//     selfDescription,
+//     jobDescription,
+//   });
 
-//     const interViewReportByAi = await generateInterviewReport({
-//         resume: resumeContent.text,
-//         selfDescription,
-//         jobDescription
-//     })
+  
 
+//   interViewReportByAi.skillGaps =
+// interViewReportByAi.skillGaps.map((gap)=>({
+
+//     ...gap,
+
+//     severity:
+//     gap.severity.toLowerCase()
+
+// }))
+
+//   try {
 //     const interviewReport = await interviewReportModel.create({
-//         user: req.user.id,
-//         resume: resumeContent.text,
-//         selfDescription,
-//         jobDescription,
-//         ...interViewReportByAi
-//     })
+//       user: req.user.id,
 
-//     res.status(201).json({
-//         message: "Interview report generated successfully.",
-//         interviewReport
-//     })
+//       resume: resumeContent.text,
 
+//       selfDescription,
+
+//       jobDescription,
+
+//       title: interViewReportByAi.jobTitle || "Software Developer",
+
+//       matchScore: interViewReportByAi.matchScore,
+
+//       technicalQuestions: interViewReportByAi.technicalQuestions,
+
+//       behavioralQuestions: interViewReportByAi.behavioralQuestions,
+
+//       skillGaps: interViewReportByAi.skillGaps,
+
+//       preparationPlan: interViewReportByAi.preparationPlan,
+//     });
+
+//     console.log("SAVED REPORT =====>", interviewReport);
+
+//     return res.status(201).json({
+//       message: "Interview report generated successfully",
+
+//       interviewReport,
+//     });
+//   } catch (error) {
+//     console.log("DATABASE ERROR =====>", error.message);
+
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+
+//   console.log("SAVED REPORT =====>", interviewReport);
+
+//   res.status(201).json({
+//     message: "Interview report generated successfully.",
+
+//     interviewReport,
+//   });
 // }
 async function generateInterViewReportController(req, res) {
-  const { selfDescription, jobDescription } = req.body;
-
-  let resumeContent = {
-    text: "",
-  };
-
-  if (req.file) {
-    resumeContent = await new pdfParse.PDFParse(
-      Uint8Array.from(req.file.buffer),
-    ).getText();
-  }
-
-  const interViewReportByAi = await generateInterviewReport({
-    resume: resumeContent.text,
-    selfDescription,
-    jobDescription,
-  });
-
-  // const interviewReport = await interviewReportModel.create({
-  //     user: req.user.id,
-  //     resume: resumeContent.text,
-  //     selfDescription,
-  //     jobDescription,
-  //     ...interViewReportByAi
-  // })
-  //   let interviewReport;
-
-  //   try {
-  //     interviewReport = await interviewReportModel.create({
-  //       user: req.user.id,
-  //       resume: resumeContent.text,
-  //       selfDescription,
-  //       jobDescription,
-  //       title: interViewReportByAi.jobTitle || "Software Developer",
-  //       ...interViewReportByAi,
-  //     });
-  //   } catch (error) {
-  //     console.log("DATABASE SAVE ERROR =====>", error);
-  //   }
-
-  //   res.status(201).json({
-  //     message: "Interview report generated successfully.",
-  //     interviewReport,
-  //   });
-
-
-  interViewReportByAi.skillGaps =
-interViewReportByAi.skillGaps.map((gap)=>({
-
-    ...gap,
-
-    severity:
-    gap.severity.toLowerCase()
-
-}))
 
   try {
-    const interviewReport = await interviewReportModel.create({
-      user: req.user.id,
+
+    const { selfDescription, jobDescription } = req.body;
+
+    let resumeContent = {
+      text: "",
+    };
+
+
+    if (req.file) {
+
+      resumeContent = await new pdfParse.PDFParse(
+        Uint8Array.from(req.file.buffer)
+      ).getText();
+
+    }
+
+
+    const interViewReportByAi = await generateInterviewReport({
 
       resume: resumeContent.text,
 
@@ -112,41 +114,95 @@ interViewReportByAi.skillGaps.map((gap)=>({
 
       jobDescription,
 
-      title: interViewReportByAi.jobTitle || "Software Developer",
-
-      matchScore: interViewReportByAi.matchScore,
-
-      technicalQuestions: interViewReportByAi.technicalQuestions,
-
-      behavioralQuestions: interViewReportByAi.behavioralQuestions,
-
-      skillGaps: interViewReportByAi.skillGaps,
-
-      preparationPlan: interViewReportByAi.preparationPlan,
     });
 
-    console.log("SAVED REPORT =====>", interviewReport);
+
+    console.log(
+      "AI RESPONSE =====>",
+      interViewReportByAi
+    );
+
+
+    if(interViewReportByAi.skillGaps){
+
+      interViewReportByAi.skillGaps =
+      interViewReportByAi.skillGaps.map((gap)=>({
+
+        ...gap,
+
+        severity: gap.severity?.toLowerCase()
+
+      }));
+
+    }
+
+
+
+    const interviewReport = await interviewReportModel.create({
+
+      user:req.user.id,
+
+      resume:resumeContent.text,
+
+      selfDescription,
+
+      jobDescription,
+
+      title:
+      interViewReportByAi.jobTitle ||
+      "Software Developer",
+
+      matchScore:
+      interViewReportByAi.matchScore,
+
+      technicalQuestions:
+      interViewReportByAi.technicalQuestions,
+
+      behavioralQuestions:
+      interViewReportByAi.behavioralQuestions,
+
+      skillGaps:
+      interViewReportByAi.skillGaps,
+
+      preparationPlan:
+      interViewReportByAi.preparationPlan,
+
+    });
+
+
+    console.log(
+      "SAVED REPORT =====>",
+      interviewReport._id
+    );
+
 
     return res.status(201).json({
-      message: "Interview report generated successfully",
+
+      message:
+      "Interview report generated successfully",
 
       interviewReport,
+
     });
-  } catch (error) {
-    console.log("DATABASE ERROR =====>", error.message);
+
+
+  }
+  catch(error){
+
+    console.log(
+      "INTERVIEW ERROR =====>",
+      error
+    );
+
 
     return res.status(500).json({
-      message: error.message,
+
+      message:error.message,
+
     });
+
   }
 
-  console.log("SAVED REPORT =====>", interviewReport);
-
-  res.status(201).json({
-    message: "Interview report generated successfully.",
-
-    interviewReport,
-  });
 }
 
 /**
