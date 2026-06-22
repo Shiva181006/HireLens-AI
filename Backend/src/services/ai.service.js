@@ -3,6 +3,16 @@ const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
 const puppeteer = require("puppeteer");
 
+console.log(
+  "GOOGLE KEY:",
+  process.env.GOOGLE_GENAI_API_KEY ? "FOUND" : "MISSING"
+);
+
+console.log(
+  "KEY START:",
+  process.env.GOOGLE_GENAI_API_KEY?.substring(0, 6)
+);
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
