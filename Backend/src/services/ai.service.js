@@ -4,19 +4,18 @@ const { z } = require("zod");
 
 const puppeteer = require("puppeteer");
 
+const models = [
+  "gemini-2.5-flash-lite",
 
+  "gemini-2.0-flash-lite",
 
-
-
+  "gemini-2.0-flash",
+];
 
 const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-   
+  apiKey: process.env.GEMINI_API_KEY,
 });
-console.log(
-    "SERVICE KEY:",
-    process.env.GEMINI_API_KEY.substring(0,10)
-);
+console.log("SERVICE KEY:", process.env.GEMINI_API_KEY.substring(0, 10));
 
 const interviewReportSchema = z.object({
   matchScore: z
@@ -109,7 +108,7 @@ async function generateInterviewReport({
   selfDescription,
   jobDescription,
 }) {
-const prompt = `
+  const prompt = `
 
 You are an expert technical interviewer.
 
@@ -202,21 +201,17 @@ Target Job:
 
 ${jobDescription}
 
-`
+`;
 
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-lite",
 
+    contents: prompt,
 
-const response = await ai.models.generateContent({
-
-    model:"gemini-2.5-flash-lite",
-
-    contents:prompt,
-
-    config:{
-        responseMimeType:"application/json"
-    }
-
-});
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
 
   console.log("INTERVIEW RAW AI RESPONSE =====>", response.text);
 
@@ -229,12 +224,9 @@ const response = await ai.models.generateContent({
 
 async function generatePdfFromHtml(htmlContent) {
   const browser = await puppeteer.launch({
-    headless:true,
-    args:[
-        "--no-sandbox",
-        "--disable-setuid-sandbox"
-    ]
-});
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
@@ -277,15 +269,37 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         
                     `;
 
- const response = await ai.models.generateContent({
-    model:"gemini-2.5-flash-lite",
+  let response;
 
-    contents:prompt,
+  for (const model of models) {
+    try {
+      console.log("Trying model:", model);
 
-    config:{
-        responseMimeType:"application/json"
+      response = await ai.models.generateContent({
+        model: model,
+
+        contents: prompt,
+
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+
+      console.log("Using model:", model);
+
+      break;
+    } catch (error) {
+      console.log(model, "failed:", error.status);
+
+      if (error.status !== 503 && error.status !== 429) {
+        throw error;
+      }
     }
-});
+  }
+
+  if (!response) {
+    throw new Error("AI models are busy. Please try again after some time.");
+  }
 
   const jsonContent = JSON.parse(response.text);
 

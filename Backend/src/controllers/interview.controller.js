@@ -99,11 +99,11 @@ async function generateInterViewReportController(req, res) {
     };
 
 
-   if(req.file){
+  if(req.file){
 
-  const data = await pdfParse(req.file.buffer);
-
-  resumeContent.text = data.text;
+  resumeContent = await new pdfParse.PDFParse(
+    Uint8Array.from(req.file.buffer)
+  ).getText();
 
 }
 
