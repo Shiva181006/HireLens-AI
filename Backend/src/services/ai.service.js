@@ -1,21 +1,22 @@
+require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const { z } = require("zod");
-const { zodToJsonSchema } = require("zod-to-json-schema");
+
 const puppeteer = require("puppeteer");
 
-console.log(
-  "GOOGLE KEY:",
-  process.env.GOOGLE_GENAI_API_KEY ? "FOUND" : "MISSING"
-);
 
-console.log(
-  "KEY START:",
-  process.env.GOOGLE_GENAI_API_KEY?.substring(0, 6)
-);
+
+
+
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GENAI_API_KEY,
+    apiKey: process.env.GEMINI_API_KEY,
+   
 });
+console.log(
+    "SERVICE KEY:",
+    process.env.GEMINI_API_KEY.substring(0,10)
+);
 
 const interviewReportSchema = z.object({
   matchScore: z
@@ -205,16 +206,14 @@ ${jobDescription}
 
 
 
- const response = await ai.models.generateContent({
+const response = await ai.models.generateContent({
 
-    model:"gemini-3-flash-preview",
+    model:"gemini-2.5-flash-lite",
 
     contents:prompt,
 
     config:{
-
         responseMimeType:"application/json"
-
     }
 
 });
@@ -229,7 +228,13 @@ ${jobDescription}
 }
 
 async function generatePdfFromHtml(htmlContent) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    headless:true,
+    args:[
+        "--no-sandbox",
+        "--disable-setuid-sandbox"
+    ]
+});
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
@@ -272,14 +277,15 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         
                     `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: zodToJsonSchema(resumePdfSchema),
-    },
-  });
+ const response = await ai.models.generateContent({
+    model:"gemini-2.5-flash-lite",
+
+    contents:prompt,
+
+    config:{
+        responseMimeType:"application/json"
+    }
+});
 
   const jsonContent = JSON.parse(response.text);
 

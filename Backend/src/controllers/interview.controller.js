@@ -88,6 +88,8 @@ const interviewReportModel = require("../models/interviewReport.model");
 // }
 async function generateInterViewReportController(req, res) {
 
+  console.log("🔥 INTERVIEW CONTROLLER HIT");
+
   try {
 
     const { selfDescription, jobDescription } = req.body;
@@ -97,13 +99,13 @@ async function generateInterViewReportController(req, res) {
     };
 
 
-    if (req.file) {
+   if(req.file){
 
-      resumeContent = await new pdfParse.PDFParse(
-        Uint8Array.from(req.file.buffer)
-      ).getText();
+  const data = await pdfParse(req.file.buffer);
 
-    }
+  resumeContent.text = data.text;
+
+}
 
 
     const interViewReportByAi = await generateInterviewReport({
@@ -149,7 +151,7 @@ async function generateInterViewReportController(req, res) {
       jobDescription,
 
       title:
-      interViewReportByAi.jobTitle ||
+      interViewReportByAi.title ||
       "Software Developer",
 
       matchScore:
@@ -189,19 +191,45 @@ async function generateInterViewReportController(req, res) {
   }
   catch(error){
 
-    console.log(
-      "INTERVIEW ERROR =====>",
-      error
-    );
+  console.log("========== ERROR START ==========");
+  console.log(error);
+  console.log("========== ERROR END ==========");
 
 
-    return res.status(500).json({
+  // Gemini limit exceeded
+  if(error.status === 429){
 
-      message:error.message,
+    return res.status(429).json({
+
+      message:
+      "AI limit exceeded. Please try again after some time."
 
     });
 
   }
+
+
+  // Gemini server busy
+  if(error.status === 503){
+
+    return res.status(503).json({
+
+      message:
+      "AI service is busy right now. Please try again later."
+
+    });
+
+  }
+
+
+  return res.status(500).json({
+
+    message:
+    "Report generation failed. Please try again."
+
+  });
+
+}
 
 }
 
